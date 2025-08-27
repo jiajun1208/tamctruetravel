@@ -19,6 +19,9 @@
                 <button id="add-trip-button" class="animated-button">新增行程</button>
             </div>
         </header>
+        <div id="user-info" class="user-info-container">
+            <!-- User ID will be displayed here -->
+        </div>
 
         <main>
             <div class="trips-section">
@@ -77,7 +80,32 @@
             </div>
         </main>
     </div>
-
+    
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, doc, setDoc, deleteDoc, onSnapshot, query, orderBy, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // Expose Firebase modules to the global scope
+        window.firebase = {
+            initializeApp,
+            getAuth,
+            signInAnonymously,
+            signInWithCustomToken,
+            onAuthStateChanged,
+            getFirestore,
+            collection,
+            addDoc,
+            doc,
+            setDoc,
+            deleteDoc,
+            onSnapshot,
+            query,
+            orderBy,
+            getDoc
+        };
+    </script>
     <script src="script.js"></script>
 </body>
 </html>
