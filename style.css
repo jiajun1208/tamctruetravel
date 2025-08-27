@@ -1,0 +1,411 @@
+/* 網站整體設計 */
+:root {
+    --primary-color: #00796b;
+    --secondary-color: #e0f7fa;
+    --background-start: #b3e5fc;
+    --background-end: #80deea;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --text-color: #333;
+    --highlight-color: #004d40;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    color: var(--text-color);
+    background: linear-gradient(135deg, var(--background-start), var(--background-end));
+    background-attachment: fixed;
+    transition: background 0.5s ease;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* 標頭與搜尋欄 */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 40px;
+    background-color: var(--card-bg);
+    border-radius: 15px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 20px;
+    z-index: 1000;
+    transform: translateY(0);
+    animation: slideDown 0.8s ease-out forwards;
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-100px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.logo {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    letter-spacing: 2px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.search-container {
+    display: flex;
+    gap: 10px;
+    width: 60%;
+}
+
+#search-input {
+    width: 100%;
+    padding: 12px 20px;
+    border: 2px solid var(--primary-color);
+    border-radius: 30px;
+    font-size: 1rem;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+#search-input:focus {
+    outline: none;
+    box-shadow: 0 0 15px rgba(0, 121, 107, 0.2);
+    border-color: var(--highlight-color);
+}
+
+/* 調整按鈕樣式以適應圖示 */
+.animated-button {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 30px;
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.animated-button:hover {
+    background-color: var(--highlight-color);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.animated-button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 300%;
+    height: 300%;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform 0.4s ease;
+    z-index: 1;
+}
+
+.animated-button:hover::before {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* 針對圖示按鈕的特殊樣式 */
+#search-button {
+    padding: 12px 20px;
+    border-radius: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+}
+
+/* 主內容區塊 */
+main {
+    display: flex;
+    gap: 40px;
+    animation: fadeIn 1s ease-in forwards;
+    animation-delay: 0.5s;
+    opacity: 0;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.form-section, .trips-section, .trip-detail-section {
+    background-color: var(--card-bg);
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    display: none;
+    width: 100%;
+}
+
+.trips-section {
+    display: block;
+}
+
+.form-section {
+    flex-direction: column;
+}
+
+.trips-section, .form-section, .trip-detail-section {
+    animation: slideInLeft 0.8s ease-out forwards;
+    animation-delay: 0.8s;
+    opacity: 0;
+}
+
+@keyframes slideInLeft {
+    from { transform: translateX(-50px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(50px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+h2 {
+    color: var(--primary-color);
+    border-bottom: 3px solid var(--primary-color);
+    padding-bottom: 15px;
+    margin-top: 0;
+}
+
+.form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+input[type="text"], input[type="url"], textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+input[type="text"]:focus, input[type="url"]:focus, textarea:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 5px rgba(0, 121, 107, 0.2);
+    outline: none;
+}
+
+/* 新增的樣式：天數編輯介面 */
+.day-input-group {
+    position: relative;
+    margin-bottom: 15px;
+    padding: 20px;
+    border: 1px dashed var(--primary-color);
+    border-radius: 10px;
+    background-color: var(--secondary-color);
+}
+
+.day-input-group textarea,
+.day-input-group input[type="text"] {
+    border: 1px solid var(--primary-color);
+    resize: vertical;
+}
+
+.remove-day-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: #ef5350;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0.8;
+    transition: opacity 0.3s;
+}
+
+.remove-day-button:hover {
+    opacity: 1;
+}
+
+/* 圖片預覽區塊 */
+.image-preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+.image-preview-container img {
+    max-width: 100px;
+    max-height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+/* 行程卡片列表 */
+#trips-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 30px;
+}
+
+.trip-card {
+    background-color: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: scale(1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    margin-top: 20px;
+    cursor: pointer;
+}
+
+@keyframes popIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.trip-card:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.trip-card h3 {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 10px;
+    margin-top: 0;
+    transition: color 0.3s ease;
+}
+
+.trip-card:hover h3 {
+    color: var(--highlight-color);
+}
+
+.trip-card p {
+    margin: 5px 0;
+    line-height: 1.6;
+}
+
+.tags-container {
+    margin-top: 15px;
+}
+
+.tags-container span {
+    display: inline-block;
+    background-color: var(--secondary-color);
+    color: var(--primary-color);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    margin: 0 5px 5px 0;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.tags-container span:hover {
+    transform: scale(1.1);
+    background-color: #d1f7e0;
+}
+
+.trip-day-content {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+.trip-day-content h4 {
+    margin-bottom: 5px;
+}
+.trip-day-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+.trip-day-images img {
+    max-width: 100px;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* 行程細節頁面樣式 */
+.trip-detail-section h2 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.detail-header {
+    display: flex;
+    justify-content: flex-start;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.canva-link-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 30px;
+    border: 2px dashed var(--primary-color);
+    border-radius: 15px;
+    background-color: var(--secondary-color);
+    gap: 15px;
+    animation: fadeIn 1s ease-in forwards;
+}
+
+.canva-link-container a {
+    display: inline-block;
+    padding: 12px 25px;
+    border-radius: 30px;
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.canva-link-container a:hover {
+    background-color: var(--highlight-color);
+    transform: translateY(-2px);
+}
+

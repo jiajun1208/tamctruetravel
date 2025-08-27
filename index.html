@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAMC真旅遊</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">TAMC真旅遊</div>
+            <div class="header-actions">
+                <div class="search-container">
+                    <input type="text" id="search-input" placeholder="搜尋目的地或標籤...">
+                    <button id="search-button" class="animated-button">🔍</button>
+                </div>
+                <button id="add-trip-button" class="animated-button">新增行程</button>
+            </div>
+        </header>
+
+        <main>
+            <div class="trips-section">
+                <h2>所有行程</h2>
+                <div id="trips-list">
+                    <!-- 行程將由 JavaScript 動態新增到這裡 -->
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-header">
+                    <h2 id="form-title">新增旅遊行程</h2>
+                    <button id="back-to-list-button" class="animated-button">返回首頁</button>
+                </div>
+                <form id="add-trip-form">
+                    <input type="hidden" id="trip-id"> <!-- 用於儲存編輯中的行程 ID -->
+                    <div class="form-group">
+                        <label for="trip-title">行程標題：</label>
+                        <input type="text" id="trip-title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="trip-destination">目的地：</label>
+                        <input type="text" id="trip-destination" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="trip-tags">標籤 (以逗號分隔)：</label>
+                        <input type="text" id="trip-tags" placeholder="例如：日本, 東京, 美食">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="canva-link">Canva 共享檢視連結 (選填)：</label>
+                        <input type="url" id="canva-link" placeholder="貼上 Canva 共享檢視連結，例如：https://www.canva.com/design/DAFFa...">
+                        <small style="color: #888; font-size: 0.9em; margin-top: 5px;">* 如果您提供 Canva 連結，每日行程內容將被忽略。</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>行程內容：</label>
+                        <div id="days-container">
+                            <!-- 天數輸入框將由 JavaScript 動態新增到這裡 -->
+                        </div>
+                        <button type="button" id="add-day-button" class="animated-button">新增天數</button>
+                    </div>
+
+                    <button type="submit" id="submit-button" class="animated-button">新增行程</button>
+                </form>
+            </div>
+
+            <div class="trip-detail-section">
+                <div class="detail-header">
+                    <button id="back-from-detail-button" class="animated-button back-to-list-button">返回行程列表</button>
+                    <button id="edit-trip-button" class="animated-button">編輯行程</button>
+                </div>
+                <div id="trip-detail-content">
+                    <!-- 行程詳細內容將由 JavaScript 動態新增到這裡 -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
