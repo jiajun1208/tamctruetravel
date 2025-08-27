@@ -1,5 +1,59 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // 取得所有 DOM 元素
+// Await the Firebase modules to be loaded by the HTML file
+window.addEventListener('load', async () => {
+    // Check for global Firebase objects exposed by the HTML script
+    if (!window.firebase) {
+        console.error("Firebase SDK not loaded. Please ensure the <script type='module'> block is present and correct in index.html.");
+        return;
+    }
+
+    const {
+        initializeApp,
+        getAuth,
+        signInAnonymously,
+        signInWithCustomToken,
+        onAuthStateChanged,
+        getFirestore,
+        collection,
+        addDoc,
+        doc,
+        setDoc,
+        deleteDoc,
+        onSnapshot,
+        query,
+        orderBy,
+        getDoc
+    } = window.firebase;
+
+    // Firebase initialization variables provided by the environment
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    // Use the user-provided Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCZSC4KP9r9Ia74gjhVM4hkhkCiXU6ltR4",
+      authDomain: "avny-ccbe9.firebaseapp.com",
+      databaseURL: "https://avny-ccbe9-default-rtdb.firebaseio.com",
+      projectId: "avny-ccbe9",
+      storageBucket: "avny-ccbe9.firebasestorage.app",
+      messagingSenderId: "686829295344",
+      appId: "1:686829295344:web:5323d5a6861c4326701435",
+      measurementId: "G-WMGJ1H89PF"
+    };
+    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+    // Check if Firebase config is available
+    if (Object.keys(firebaseConfig).length === 0) {
+        console.error("Firebase config is missing. Cannot initialize the app.");
+        return;
+    }
+
+    // Initialize Firebase and Firestore
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let userId = null;
+    let trips = []; // Local array to hold trip data from Firestore
+
+    // Get all DOM elements
     const addTripForm = document.getElementById('add-trip-form');
     const tripsList = document.getElementById('trips-list');
     const searchInput = document.getElementById('search-input');
@@ -18,12 +72,56 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitButton = document.getElementById('submit-button');
     const tripIdInput = document.getElementById('trip-id');
     const editTripButton = document.getElementById('edit-trip-button');
-
-    // 存放所有行程的陣列
-    let trips = [];
+    const userInfoElement = document.getElementById('user-info');
     let dayCounter = 0;
+
+    // --- Firebase Auth & Data Sync ---
     
-    // 創建新的天數輸入框
+    // Listen for authentication state changes
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            userId = user.uid;
+            console.log("User is signed in with UID:", userId);
+            userInfoElement.innerHTML = `
+                <p>您已登入。使用者 ID: <span style="font-weight: bold;">${userId}</span></p>
+                <p>您的所有行程將被自動儲存。</p>
+            `;
+            // Set up real-time listener for trips after auth
+            setupTripListener();
+        } else {
+            console.log("No user is signed in. Attempting anonymous sign-in.");
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Authentication failed:", error);
+            }
+        }
+    });
+
+    // Real-time listener for the user's trips
+    function setupTripListener() {
+        const tripCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/travel_trips`);
+        onSnapshot(tripCollectionRef, (snapshot) => {
+            trips = [];
+            snapshot.forEach(doc => {
+                trips.push({ id: doc.id, ...doc.data() });
+            });
+            console.log("Trips updated from Firestore:", trips);
+            // Sort trips by creation timestamp if available, otherwise by title
+            trips.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '') || a.title.localeCompare(b.title));
+            displayTrips(trips);
+        }, (error) => {
+            console.error("Error fetching trips:", error);
+        });
+    }
+
+    // --- DOM Manipulation & Event Handlers ---
+
+    // Create a new day input section
     function createDayInput(dayData = {}) {
         dayCounter++;
         const dayInputGroup = document.createElement('div');
@@ -49,14 +147,12 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         daysContainer.appendChild(dayInputGroup);
 
-        // 為刪除按鈕新增事件監聽器
         const removeButton = dayInputGroup.querySelector('.remove-day-button');
         removeButton.addEventListener('click', () => {
             dayInputGroup.remove();
             updateDayLabels();
         });
         
-        // 為圖片輸入新增事件監聽器
         const imageInput = dayInputGroup.querySelector('.image-input');
         const imagePreviewContainer = dayInputGroup.querySelector('.image-preview-container');
         imageInput.addEventListener('change', (event) => {
@@ -76,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 更新天數標籤的數字
+    // Update day labels after removal
     function updateDayLabels() {
         const dayInputGroups = daysContainer.querySelectorAll('.day-input-group');
         dayCounter = 0;
@@ -89,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 切換區塊顯示的函式
+    // Switch between different sections of the app
     function showSection(section, trip = null) {
         tripsSection.style.display = 'none';
         formSection.style.display = 'none';
@@ -101,7 +197,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (section === 'form') {
             formSection.style.display = 'flex';
             formSection.style.animation = 'fadeIn 1s ease-in forwards';
-            // 進入表單時重設表單並根據 trip 參數填充
             resetForm();
             if (trip) {
                 formTitle.textContent = '編輯旅遊行程';
@@ -115,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!trip.canvaLink) {
                     trip.days.forEach(day => createDayInput(day));
                 } else {
-                    daysContainer.innerHTML = ''; // 如果有 Canva 連結，清空每日行程
+                    daysContainer.innerHTML = '';
                 }
 
             } else {
@@ -129,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 重設表單
+    // Reset the form to its initial state
     function resetForm() {
         addTripForm.reset();
         daysContainer.innerHTML = '';
@@ -137,24 +232,29 @@ document.addEventListener('DOMContentLoaded', () => {
         tripIdInput.value = '';
     }
     
-    // 處理「新增行程」按鈕點擊事件
+    // Handle Add Trip button click
     addTripButton.addEventListener('click', () => {
         showSection('form');
     });
 
-    // 處理「返回首頁」按鈕點擊事件 (表單頁)
+    // Handle Back to List button click from form page
     backToListButton.addEventListener('click', () => {
         showSection('trips');
     });
     
-    // 處理「返回行程列表」按鈕點擊事件 (細節頁)
+    // Handle Back to List button click from detail page
     backFromDetailButton.addEventListener('click', () => {
         showSection('trips');
     });
 
-    // 處理表單提交事件，新增或更新行程
+    // Handle form submission to add or update a trip in Firestore
     addTripForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        if (!userId) {
+            console.error("User not authenticated. Cannot save trip.");
+            return;
+        }
 
         const title = document.getElementById('trip-title').value.trim();
         const destination = document.getElementById('trip-destination').value.trim();
@@ -168,7 +268,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         let daysData = [];
-        // 如果沒有提供 Canva 連結，才儲存每日行程細節
         if (canvaLink === '') {
             const dayInputGroups = daysContainer.querySelectorAll('.day-input-group');
             if (dayInputGroups.length === 0 || dayInputGroups.every(day => day.querySelector('.day-content-input').value.trim() === '')) {
@@ -195,52 +294,48 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // 將標籤字串轉換為陣列，並去除前後空白
         const tags = tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag !== '');
 
-        const newTrip = {
+        const tripData = {
             title,
             destination,
             tags,
-            canvaLink, // 新增 Canva 連結欄位
-            days: daysData
+            canvaLink,
+            days: daysData,
+            createdAt: new Date().toISOString() // Add timestamp for sorting
         };
 
-        if (tripId) {
-            // 更新現有行程
-            const index = trips.findIndex(t => t.id === parseInt(tripId));
-            if (index !== -1) {
-                trips[index] = { ...trips[index], ...newTrip };
+        try {
+            if (tripId) {
+                const tripDocRef = doc(db, `artifacts/${appId}/users/${userId}/travel_trips`, tripId);
+                await setDoc(tripDocRef, tripData, { merge: true });
+                console.log("Trip updated with ID: ", tripId);
+            } else {
+                const tripCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/travel_trips`);
+                const docRef = await addDoc(tripCollectionRef, tripData);
+                console.log("Trip added with ID: ", docRef.id);
             }
-        } else {
-            // 新增新行程
-            newTrip.id = Date.now(); // 簡單的唯一 ID
-            trips.unshift(newTrip); // 新增到陣列開頭
+            showSection('trips');
+        } catch (e) {
+            console.error("Error saving trip:", e);
         }
-
-        displayTrips(trips);
-        showSection('trips'); // 新增/更新後自動返回首頁
     });
 
-    // 處理搜尋事件
-    searchButton.addEventListener('click', () => {
-        performSearch();
-    });
-
+    // Handle search event
+    searchButton.addEventListener('click', performSearch);
     searchInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             performSearch();
         }
     });
 
-    // 新增天數按鈕的事件監聽器
+    // Handle add day button click
     addDayButton.addEventListener('click', createDayInput);
 
-    // 搜尋邏輯
+    // Search logic
     function performSearch() {
         const query = searchInput.value.toLowerCase();
         const filteredTrips = trips.filter(trip => {
-            // 搜尋目的地或標籤
             const matchesDestination = trip.destination.toLowerCase().includes(query);
             const matchesTags = trip.tags.some(tag => tag.toLowerCase().includes(query));
             return matchesDestination || matchesTags;
@@ -248,10 +343,9 @@ document.addEventListener('DOMContentLoaded', () => {
         displayTrips(filteredTrips);
     }
 
-    // 動態顯示行程到頁面 (只顯示摘要)
+    // Display trips on the page (summary view)
     function displayTrips(tripsToDisplay) {
-        tripsList.innerHTML = ''; // 清空目前的列表
-
+        tripsList.innerHTML = '';
         if (tripsToDisplay.length === 0) {
             tripsList.innerHTML = '<p style="text-align: center; color: #888;">找不到符合條件的行程。</p>';
             return;
@@ -260,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tripsToDisplay.forEach(trip => {
             const tripCard = document.createElement('div');
             tripCard.classList.add('trip-card');
-            tripCard.setAttribute('data-id', trip.id); // 新增 data-id 屬性
+            tripCard.setAttribute('data-id', trip.id);
 
             tripCard.innerHTML = `
                 <h3>${trip.title}</h3>
@@ -271,20 +365,20 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             tripsList.appendChild(tripCard);
 
-            // 為每個卡片新增點擊事件監聽器
             tripCard.addEventListener('click', () => showTripDetails(trip.id));
         });
     }
 
-    // 顯示單一行程的詳細內容
+    // Show detailed view of a single trip
     function showTripDetails(tripId) {
         const selectedTrip = trips.find(trip => trip.id === tripId);
-        if (!selectedTrip) return;
+        if (!selectedTrip) {
+            console.error("Trip not found for ID:", tripId);
+            return;
+        }
 
-        // 清空內容
         tripDetailContent.innerHTML = '';
 
-        // 顯示標題、目的地和標籤
         tripDetailContent.innerHTML = `
             <h2>${selectedTrip.title}</h2>
             <p><strong>目的地：</strong> ${selectedTrip.destination}</p>
@@ -293,9 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
-        // 檢查是否有 Canva 連結
         if (selectedTrip.canvaLink && selectedTrip.canvaLink.startsWith('https://www.canva.com/design/')) {
-            // 如果有，顯示一個按鈕讓使用者在新分頁開啟
             const canvaLinkContainer = document.createElement('div');
             canvaLinkContainer.className = 'canva-link-container';
             canvaLinkContainer.innerHTML = `
@@ -306,12 +398,11 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             tripDetailContent.appendChild(canvaLinkContainer);
         } else {
-            // 否則，顯示手動輸入的每日行程
             let daysHtml = '';
             selectedTrip.days.forEach((day, index) => {
                 const formattedContent = day.content.replace(/\n/g, '<br>');
                 const hotelInfo = day.hotel ? `<p><strong>入住飯店：</strong>${day.hotel}</p>` : '';
-                const imagesHtml = day.images.length > 0 ?
+                const imagesHtml = day.images && day.images.length > 0 ?
                     `<div class="trip-day-images">${day.images.map(imgSrc => `<img src="${imgSrc}" alt="行程圖片">`).join('')}</div>`
                     : '';
                 
@@ -331,13 +422,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         showSection('detail');
         
-        // 為編輯按鈕新增事件監聽器
-        editTripButton.addEventListener('click', () => {
+        editTripButton.onclick = () => {
             showSection('form', selectedTrip);
-        });
+        };
     }
 
-    // 頁面初次載入時顯示所有行程（一開始是空的）
+    // Initially show the trips section
     showSection('trips');
-    displayTrips(trips);
 });
+
